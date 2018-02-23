@@ -7,32 +7,29 @@ using UnityEngine.UI;
 public class MainSceneManager : MonoBehaviour
 {
     public Image image_001;
+    public bool isLoom = false;
 
     string _path = String.Empty;
     string _Str = "Loom继承自MonoBehaviour,在Unity流程管理中Update方法下检查需要回调";
-
     void Start()
     {
         _path = string.Format("{0}/{1}.txt", Application.streamingAssetsPath, "test");
         if (!File.Exists(_path))
             File.Create(_path);
+        OnWriteFinish();
         
-//        MainThread();
-        
-        Loom.RunAsync(() =>
+        if (isLoom)
         {
-            Thread thread = new Thread(NewThread);
-            thread.Start();
-        });
+            Loom.RunAsync(NewThread);
+        }
+        else
+        {
+            MainThread();
+        }
     }
 
     void NewThread()
     {
-        if (!File.Exists(_path))
-        {
-            File.Create(_path);
-        }
-
         try
         {
             for (int i = 0; i < 100000; i++)
@@ -40,6 +37,7 @@ public class MainSceneManager : MonoBehaviour
                 File.AppendAllText(_path, _Str);
                 Loom.QueueOnMainThread((p) => { image_001.fillAmount = (float) i / (float) 100000; }, null);
             }
+            OnWriteFinish();
         }
         catch (Exception e)
         {
@@ -55,5 +53,12 @@ public class MainSceneManager : MonoBehaviour
             File.AppendAllText(_path, _Str);
             image_001.fillAmount = (float) i / (float) 100000;
         }
+
+        OnWriteFinish();
+    }
+
+    void OnWriteFinish()
+    {
+        File.WriteAllText(_path, ""); 
     }
 }
